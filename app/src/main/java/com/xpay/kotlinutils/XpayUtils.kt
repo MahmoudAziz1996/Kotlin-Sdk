@@ -3,16 +3,22 @@ package com.xpay.kotlinutils
 import android.content.Context
 import android.widget.Toast
 import api.ServiceBuilder
+import com.google.gson.Gson
+import com.google.gson.JsonArray
 import com.xpay.kotlin.models.*
 import com.xpay.kotlinutils.api.Xpay
 import com.xpay.kotlinutils.model.TotalAmount
+import com.xpay.kotlinutils.model.CustomField
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 object XpayUtils {
 
-    var apiKey: String? = null
+  var apiKey: String? = null
     var variableAmountID: Number? = null
     var iframeUrl: String? = null
     var totalAmount: TotalAmount? = null
@@ -22,6 +28,8 @@ object XpayUtils {
     var paymentOptions: ArrayList<String> = ArrayList()
         private set
     var currency: String? = "EGP"
+        private set
+    var customFields = mutableListOf<CustomField>()
         private set
     var user: User? = null
     var amount: Number? = null
@@ -55,18 +63,18 @@ object XpayUtils {
                             if(res.total_amount!=null){
                                 paymentOptions.add("CARD")
                             }
-                            if(res.cASH!=null){
+                            if(res.CASH!=null){
                                 paymentOptions.add("CASH")
                             }
-                            if(res.kIOSK!=null){
+                            if(res.KIOSK!=null){
                                 paymentOptions.add("KIOSK")
                             }
                             totalAmount = TotalAmount(
                                 res.total_amount,
-                                res.cASH.total_amount,
-                                res.kIOSK.total_amount
+                                res.CASH.total_amount,
+                                res.KIOSK.total_amount
                             )
-                            payUsing = "CARD"
+
                         }
 
                     } else {
@@ -104,6 +112,7 @@ object XpayUtils {
         })
     }
 
+   
     fun pay(
         onSuccess: (PayResponse) -> Unit,
         onFail: (String) -> Unit
@@ -112,11 +121,6 @@ object XpayUtils {
         val billingData: HashMap<String, Any> = HashMap()
         val requestBody: HashMap<String, Any> = HashMap()
 
-        when (payUsing) {
-            "CARD" -> totalAmount?.card
-            "CASH" -> totalAmount?.cash
-            "KIOSK" -> totalAmount?.kiosk
-        }
         billingData["name"] = user.name
         billingData["email"] = user.email
         billingData["phone_number"] = user.phone
@@ -125,10 +129,14 @@ object XpayUtils {
         variableAmountID?.let { requestBody.put("variable_amount_id", it) }
         communityId?.let { requestBody.put("community_id", it) }
         payUsing.let {
-            if (it != null) {
+            if (it != null && it.toUpperCase(Locale.ROOT) in paymentOptions) {
                 requestBody["pay_using"] = it
             }
         }
+        if(customFields.size>0){
+            requestBody["custom_fields"]= Gson().toJson(customFields)
+        }
+
         requestBody["billing_data"] = billingData
 
         val request = ServiceBuilder.xpayService(Xpay::class.java)
@@ -146,6 +154,12 @@ object XpayUtils {
             }
         })
     }
+    fun addCustomField(fieldName: String, fieldValue: String) {
+        customFields.add(CustomField(fieldName, fieldValue))
+    }
 
+    fun clearCustomField() {
+        customFields.clear()
+    }
 
 }
