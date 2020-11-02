@@ -1,30 +1,34 @@
 package com.xpay.kotlinutils
 
+import android.app.Application
 import android.content.Context
 import android.widget.Toast
+import com.microsoft.appcenter.AppCenter
+import com.microsoft.appcenter.analytics.Analytics
+import com.microsoft.appcenter.crashes.Crashes
 import com.xpay.kotlinutils.api.ServiceBuilder
 import com.xpay.kotlinutils.api.Xpay
 import com.xpay.kotlinutils.models.*
 import com.xpay.kotlinutils.models.api.pay.PayData
 import com.xpay.kotlinutils.models.api.pay.PayRequestBody
-import com.xpay.kotlinutils.models.api.pay.PayResponse
-import com.xpay.kotlinutils.models.api.prepare.PrepareAmountResponse
-import com.xpay.kotlinutils.models.api.prepare.PrepareRequestBody
 import com.xpay.kotlinutils.models.api.prepare.PrepareAmountData
+import com.xpay.kotlinutils.models.api.prepare.PrepareRequestBody
 import com.xpay.kotlinutils.models.api.transaction.TransactionResponse
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import okhttp3.Dispatcher
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.lang.Exception
 import java.util.*
 import kotlin.collections.HashMap
 
 object XpayUtils {
 
+    // Add appCenter  SDK to the project
+    init {
+        AppCenter.start(
+            Application(), "b30b6946-e9f8-4566-bb44-80cbf912500c",
+            Analytics::class.java, Crashes::class.java
+        )
+    }
     // API required settings
     var apiKey: String? = null
     var communityId: String? = null
